@@ -1,0 +1,1 @@
+keytool -genkey -v -alias loroff_root -keyalg RSA -keysize 2048 -sigalg SHA1withRSA -dname "CN=Loroff Root Certificate" -validity 3653 -keypass mko0okm -keystore sslproxy.jks -storepass mko0okm -storetype JKS
