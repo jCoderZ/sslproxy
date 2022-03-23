@@ -29,6 +29,15 @@ public class ProxyClient extends Thread
   /** The remote port to be contacted */
   protected int mRemotePort;
 
+  /** Flag for indicating if a tunnel is used. */
+  protected boolean mUseTunnel = false;
+
+  /** The tunnel host. */
+  protected InetAddress mTunnelHost = null;
+
+  /** The tunnel port. */
+  protected int mTunnelPort = -1;
+
   /** The outgoing protocol */
   protected String mOutProtocol;
 
@@ -48,6 +57,21 @@ public class ProxyClient extends Thread
     mOutProtocol = outProtocol;
   }
 
+  /**
+   * Constructor setting some instance parameters.
+   * @param handler      The socket of the incoming connection
+   * @param remoteHost   The remote host to be contacted
+   * @param remotePort   The remote port to be contacted
+   * @param outProtocol  The protocol of the outgoing connection
+   */
+  public ProxyClient(Socket handler, InetAddress remoteHost, int remotePort, InetAddress tunnelHost, int tunnelPort,
+                     String outProtocol)
+  {
+    this(handler, remoteHost, remotePort, outProtocol);
+    mTunnelHost = tunnelHost;
+    mTunnelPort = tunnelPort;
+    mUseTunnel = true;
+  }
 
   /**
    * The run method of the client Thread.
@@ -82,6 +106,10 @@ public class ProxyClient extends Thread
     {
       System.out.println("failed to establish " + mOutProtocol + " connection\n   from "
           + mHandler.getInetAddress() + " to " + mRemoteHost + ":" + mRemotePort);
+      if (mUseTunnel)
+      {
+        System.out.println("   through the tunnel " + mTunnelHost + ":" + mTunnelPort);
+      }
       ioe.printStackTrace();
     }
   }
@@ -95,7 +123,16 @@ public class ProxyClient extends Thread
   protected Socket startSslClient() throws IOException
   {
     SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-    SSLSocket sslSocket = (SSLSocket) factory.createSocket(mRemoteHost, mRemotePort);
+    SSLSocket sslSocket;
+    if (mUseTunnel)
+    {
+      Socket tunnelSocket = new Socket(mTunnelHost, mTunnelPort);
+      sslSocket = (SSLSocket) factory.createSocket(tunnelSocket, mRemoteHost.getHostName(), mRemotePort, true);
+    }
+    else
+    {
+      sslSocket = (SSLSocket) factory.createSocket(mRemoteHost, mRemotePort);
+    }
     sslSocket.startHandshake();
     return sslSocket;
   }

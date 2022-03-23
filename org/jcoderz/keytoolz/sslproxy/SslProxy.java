@@ -19,7 +19,13 @@ public class SslProxy
   
   /** The destination port. */
   static int sRemotePort = -1;
-  
+
+  /** The tunnel host. */
+  static InetAddress sTunnelHost = null;
+
+  /** The tunnel port. */
+  static int sTunnelPort = -1;
+
   /** The incoming protocol. */
   static String sInProtocol = null;
 
@@ -49,6 +55,21 @@ public class SslProxy
       {
         sInProtocol = args[2];
         server = new HttpServer(sLocalPort, sInProtocol);
+      }
+      else if (args[1].equals("tunnel"))
+      {
+        sRemoteHost = InetAddress.getByName(args[1]);
+        sRemotePort = Integer.parseInt(args[2]);
+        sTunnelHost = InetAddress.getByName(args[3]);
+        sTunnelPort = Integer.parseInt(args[4]);
+        sInProtocol = args[5];
+        sOutProtocol = args[6];
+        if (!sInProtocol.equals("tcp") && !sInProtocol.equals("ssl")
+                || (!sOutProtocol.equals("tcp") && !sOutProtocol.equals("ssl")))
+        {
+          throw new Exception("invalid protocol specified");
+        }
+        server = new ProxyServer(sLocalPort, sRemoteHost, sRemotePort, sTunnelHost, sTunnelPort, sInProtocol, sOutProtocol);
       }
       else
       {
@@ -93,6 +114,7 @@ public class SslProxy
     System.out.println();
     System.out.println();
     System.out.println("Usage: ProxyServer <localPort> <remoteHost> <remotePort> <inProtocol> <outProtocol>");
+    System.out.println("     | ProxyServer <localPort> tunnel <remoteHost> <remotePort> <tunnelHost> <tunnelPort> <inProtocol> <outProtocol>");
     System.out.println("     | ProxyServer <localPort> <serverType> <inProtocol>");
     System.out.println();
     System.out.println("   <inProtocol>, <outProtocol> = tcp|ssl");

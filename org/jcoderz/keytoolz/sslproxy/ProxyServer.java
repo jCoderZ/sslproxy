@@ -25,7 +25,16 @@ public class ProxyServer extends Thread
   
   /** The destination port. */
   protected int mRemotePort = -1;
-  
+
+  /** Flag for indicating if a tunnel is used. */
+  protected boolean mUseTunnel = false;
+
+  /** The tunnel host. */
+  protected InetAddress mTunnelHost = null;
+
+  /** The tunnel port. */
+  protected int mTunnelPort = -1;
+
   /** The incoming protocol. */
   protected String mInProtocol = null;
   
@@ -51,6 +60,21 @@ public class ProxyServer extends Thread
     mOutProtocol = outProtocol;
   }
 
+  /**
+   * Constructor setting some instance parameters.
+   * @param remoteHost  The remote host to be contacted
+   * @param remotePort  The remote port to be contacted
+   * @param tunnelHost  The tunnel host to be used
+   * @param tunnelPort  The tunnel port to be used
+   */
+  public ProxyServer(int localPort, InetAddress remoteHost, int remotePort, InetAddress tunnelHost, int tunnelPort,
+                     String inProtocol, String outProtocol)
+  {
+    this(localPort, remoteHost, remotePort, inProtocol, outProtocol);
+    mTunnelHost = tunnelHost;
+    mTunnelPort = tunnelPort;
+    mUseTunnel = true;
+  }
 
   /**
    * The start method for the TCP server.
@@ -110,7 +134,14 @@ public class ProxyServer extends Thread
       while (true)
       {
         Socket handler = mServer.accept();
-        new ProxyClient(handler, mRemoteHost, mRemotePort, mOutProtocol).start();
+        if (mUseTunnel)
+        {
+          new ProxyClient(handler, mRemoteHost, mRemotePort, mTunnelHost, mTunnelPort, mOutProtocol).start();
+        }
+        else
+        {
+          new ProxyClient(handler, mRemoteHost, mRemotePort, mOutProtocol).start();
+        }
       }
     }
     catch (IOException ioEx)
