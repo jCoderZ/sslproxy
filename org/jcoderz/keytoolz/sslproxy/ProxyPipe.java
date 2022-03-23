@@ -55,14 +55,18 @@ public class ProxyPipe extends Thread
    */
   public void run()
   {
+    boolean dumps = !"false".equalsIgnoreCase(System.getProperty("sslproxy.dumps"));
+        
     FileOutputStream fosPlain = null;
     FileOutputStream fosHex = null;
     PrintWriter pw = null;
     try
     {
+      if (dumps) {
       fosPlain = new FileOutputStream(mLogPrefix + "_plain_dump.log");
       fosHex = new FileOutputStream(mLogPrefix + "_hex_dump.log");
       pw = new PrintWriter(fosHex);
+      }
       byte[] data = new byte[SSL_BLOCK_SIZE];
       while (true)
       {
@@ -74,10 +78,24 @@ public class ProxyPipe extends Thread
         }
         if (readData > 0)
         {
+          if ("true".equalsIgnoreCase(System.getProperty("sslproxy.filter")))
+          {
+            String dataString = new String(data, 0, readData);
+            int startPos = dataString.indexOf("Accept-Encoding:");
+            int endPos = dataString.indexOf("\r\n", startPos);
+            if (startPos > -1 && endPos > -1)
+            {
+                System.arraycopy(data, endPos, data, startPos + 16, readData - endPos);
+                readData = readData - endPos + startPos + 16;;
+            }
+          }
+          if (dumps)
+          {
           byte[] dumpData = new byte[readData];
           System.arraycopy(data, 0, dumpData, 0, readData);
           pw.print(HexUtil.dump(dumpData));
           fosPlain.write(data, 0, readData);
+          }
           mOs.write(data, 0, readData);
         }
         else
@@ -92,25 +110,31 @@ public class ProxyPipe extends Thread
           }
         }
         mOs.flush();
+        if (dumps)
+        {
         pw.flush();
         fosHex.flush();
         fosPlain.flush();
       }
     }
+    }
     catch (IOException ioEx)
     {
-      ioEx.printStackTrace();
+      System.out.println(ioEx.toString());
     }
 
     try
     {
       mOs.flush();
+      if (dumps)
+      {
       pw.flush();
       fosHex.flush();
       fosPlain.flush();
       pw.close();
       fosHex.close();
       fosPlain.close();
+      }
     }
     catch (IOException ioEx)
     {

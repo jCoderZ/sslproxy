@@ -1,1 +1,1 @@
-java -cp sslproxy.jar;fawkez-all.jar -Djavax.net.ssl.trustStore=sslproxy.jks -Djavax.net.ssl.trustStorePassword=mko0okm -Djavax.net.ssl.keyStore=sslproxy.jks -Djavax.net.ssl.keyStorePassword=mko0okm org.jcoderz.keytoolz.sslproxy.SslProxy %*
+java -cp sslproxy.jar;fawkez-all.jar -Djavax.net.ssl.trustStore=sslproxy.jks -Djavax.net.ssl.trustStorePassword=mko0okm -Djavax.net.ssl.keyStore=sslproxy.jks -Djavax.net.ssl.keyStorePassword=mko0okm -Dsslproxy.filter=false org.jcoderz.keytoolz.sslproxy.SslProxy %*
