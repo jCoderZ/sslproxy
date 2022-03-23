@@ -92,6 +92,7 @@ public class HttpHandler extends ProxyClient
         {
           try
           {
+            System.out.println("closing stream");
             mResponseStream.close();
           }
           catch (IOException ioEx)

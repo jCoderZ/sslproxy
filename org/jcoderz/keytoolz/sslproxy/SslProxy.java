@@ -67,12 +67,12 @@ public class SslProxy
     catch (ArrayIndexOutOfBoundsException aioobEx)
     {
       System.out.println("Not enough parameters entered.");
-      usage();
+      usage(args);
       System.exit(1);
     }
     catch (Exception ex)
     {
-      usage();
+      usage(args);
       ex.printStackTrace();
       System.exit(1);
     }
@@ -83,8 +83,14 @@ public class SslProxy
   /**
    * Usage information for the command line parameters.
    */
-  private static void usage()
+  private static void usage(String[] args)
   {
+	System.out.println("Call arguments:");
+	for (int i = 0; i < args.length; i++)
+	{
+	  System.out.print(args[i] + " ");
+	}
+    System.out.println();
     System.out.println();
     System.out.println("Usage: ProxyServer <localPort> <remoteHost> <remotePort> <inProtocol> <outProtocol>");
     System.out.println("     | ProxyServer <localPort> <serverType> <inProtocol>");
