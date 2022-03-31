@@ -20,11 +20,11 @@ public class SslProxy
   /** The destination port. */
   static int sRemotePort = -1;
 
-  /** The tunnel host. */
-  static InetAddress sTunnelHost = null;
+  /** The tunnel/proxy host. */
+  static InetAddress sTransferHost = null;
 
-  /** The tunnel port. */
-  static int sTunnelPort = -1;
+  /** The tunnel/proxy port. */
+  static int sTransferPort = -1;
 
   /** The incoming protocol. */
   static String sInProtocol = null;
@@ -56,33 +56,17 @@ public class SslProxy
         sInProtocol = args[2];
         server = new HttpServer(sLocalPort, sInProtocol);
       }
+      else if (args[1].equals("proxy"))
+      {
+        server = getProxyServer(args, false);
+      }
       else if (args[1].equals("tunnel"))
       {
-        sRemoteHost = InetAddress.getByName(args[1]);
-        sRemotePort = Integer.parseInt(args[2]);
-        sTunnelHost = InetAddress.getByName(args[3]);
-        sTunnelPort = Integer.parseInt(args[4]);
-        sInProtocol = args[5];
-        sOutProtocol = args[6];
-        if (!sInProtocol.equals("tcp") && !sInProtocol.equals("ssl")
-                || (!sOutProtocol.equals("tcp") && !sOutProtocol.equals("ssl")))
-        {
-          throw new Exception("invalid protocol specified");
-        }
-        server = new ProxyServer(sLocalPort, sRemoteHost, sRemotePort, sTunnelHost, sTunnelPort, sInProtocol, sOutProtocol);
+        server = getProxyServer(args, true);
       }
       else
       {
-        sRemoteHost = InetAddress.getByName(args[1]);
-        sRemotePort = Integer.parseInt(args[2]);
-        sInProtocol = args[3];
-        sOutProtocol = args[4];
-        if (!sInProtocol.equals("tcp") && !sInProtocol.equals("ssl")
-            || (!sOutProtocol.equals("tcp") && !sOutProtocol.equals("ssl")))
-        {
-          throw new Exception("invalid protocol specified");
-        }
-        server = new ProxyServer(sLocalPort, sRemoteHost, sRemotePort, sInProtocol, sOutProtocol);
+        server = getProxyServer(args);
       }
     }
     catch (ArrayIndexOutOfBoundsException aioobEx)
@@ -100,6 +84,34 @@ public class SslProxy
     server.start();
   }
 
+  private static ProxyServer getProxyServer(String[] args) throws Exception {
+    sRemoteHost = InetAddress.getByName(args[1]);
+    sRemotePort = Integer.parseInt(args[2]);
+    sInProtocol = args[3];
+    sOutProtocol = args[4];
+    if (!sInProtocol.equals("tcp") && !sInProtocol.equals("ssl")
+        || (!sOutProtocol.equals("tcp") && !sOutProtocol.equals("ssl")))
+    {
+      throw new Exception("invalid protocol specified");
+    }
+    return new ProxyServer(sLocalPort, sRemoteHost, sRemotePort, sInProtocol, sOutProtocol);
+  }
+
+  private static ProxyServer getProxyServer(String[] args, boolean useTunnel) throws Exception {
+    sRemoteHost = InetAddress.getByName(args[2]);
+    sRemotePort = Integer.parseInt(args[3]);
+    sTransferHost = InetAddress.getByName(args[4]);
+    sTransferPort = Integer.parseInt(args[5]);
+    sInProtocol = args[6];
+    sOutProtocol = args[7];
+    if (!sInProtocol.equals("tcp") && !sInProtocol.equals("ssl")
+            || (!sOutProtocol.equals("tcp") && !sOutProtocol.equals("ssl")))
+    {
+      throw new Exception("invalid protocol specified");
+    }
+    return new ProxyServer(useTunnel, sLocalPort, sRemoteHost, sRemotePort, sTransferHost, sTransferPort, sInProtocol, sOutProtocol);
+  }
+
 
   /**
    * Usage information for the command line parameters.
@@ -114,6 +126,7 @@ public class SslProxy
     System.out.println();
     System.out.println();
     System.out.println("Usage: ProxyServer <localPort> <remoteHost> <remotePort> <inProtocol> <outProtocol>");
+    System.out.println("     | ProxyServer <localPort> proxy <remoteHost> <remotePort> <proxyHost> <proxyPort> <inProtocol> <outProtocol>");
     System.out.println("     | ProxyServer <localPort> tunnel <remoteHost> <remotePort> <tunnelHost> <tunnelPort> <inProtocol> <outProtocol>");
     System.out.println("     | ProxyServer <localPort> <serverType> <inProtocol>");
     System.out.println();

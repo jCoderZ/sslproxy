@@ -29,11 +29,11 @@ public class ProxyServer extends Thread
   /** Flag for indicating if a tunnel is used. */
   protected boolean mUseTunnel = false;
 
-  /** The tunnel host. */
-  protected InetAddress mTunnelHost = null;
+  /** The proxy/tunnel host. */
+  protected InetAddress mTransferHost = null;
 
-  /** The tunnel port. */
-  protected int mTunnelPort = -1;
+  /** The proxy/tunnel port. */
+  protected int mTransferPort = -1;
 
   /** The incoming protocol. */
   protected String mInProtocol = null;
@@ -50,8 +50,7 @@ public class ProxyServer extends Thread
    * @param remoteHost  The remote host to be contacted
    * @param remotePort  The remote port to be contacted
    */
-  public ProxyServer(int localPort, InetAddress remoteHost, int remotePort, String inProtocol,
-      String outProtocol)
+  public ProxyServer(int localPort, InetAddress remoteHost, int remotePort, String inProtocol, String outProtocol)
   {
     mLocalPort = localPort;
     mRemoteHost = remoteHost;
@@ -64,16 +63,16 @@ public class ProxyServer extends Thread
    * Constructor setting some instance parameters.
    * @param remoteHost  The remote host to be contacted
    * @param remotePort  The remote port to be contacted
-   * @param tunnelHost  The tunnel host to be used
-   * @param tunnelPort  The tunnel port to be used
+   * @param transferHost  The proxy/tunnel host to be used
+   * @param transferPort  The proxy/tunnel port to be used
    */
-  public ProxyServer(int localPort, InetAddress remoteHost, int remotePort, InetAddress tunnelHost, int tunnelPort,
-                     String inProtocol, String outProtocol)
+  public ProxyServer(boolean useTunnel, int localPort, InetAddress remoteHost, int remotePort,
+                     InetAddress transferHost, int transferPort, String inProtocol, String outProtocol)
   {
     this(localPort, remoteHost, remotePort, inProtocol, outProtocol);
-    mTunnelHost = tunnelHost;
-    mTunnelPort = tunnelPort;
-    mUseTunnel = true;
+    mUseTunnel = useTunnel;
+    mTransferHost = transferHost;
+    mTransferPort = transferPort;
   }
 
   /**
@@ -134,9 +133,10 @@ public class ProxyServer extends Thread
       while (true)
       {
         Socket handler = mServer.accept();
-        if (mUseTunnel)
+        if (mTransferHost != null)
         {
-          new ProxyClient(handler, mRemoteHost, mRemotePort, mTunnelHost, mTunnelPort, mOutProtocol).start();
+          new ProxyClient(handler,
+                  mUseTunnel, mRemoteHost, mRemotePort, mTransferHost, mTransferPort, mOutProtocol).start();
         }
         else
         {
@@ -146,7 +146,7 @@ public class ProxyServer extends Thread
     }
     catch (IOException ioEx)
     {
-      System.out.println("Warning: IOException (" + ioEx.toString() + ") occured, normally it can be ignored.");
+      System.out.println("Warning: IOException (" + ioEx.toString() + ") occurred, normally it can be ignored.");
     }
   }
 }
